@@ -24,11 +24,9 @@ builder.Host.UseSerilog();
 // -----------------------------------------------------
 builder.Services.AddHttpContextAccessor();
 
-// EF Core DbContext
+// EF Core DbContext -- add DbContext using connection string from appsettings.json
 builder.Services.AddDbContext<BookStoreDbContext>(options =>
-{
-    options.UseSqlite("Data Source=BookStore.Api/bookstore.db");
-});
+    options.UseSqlite("Data Source=../data/bookstore.db"));
 
 // Repositories
 builder.Services.AddScoped<IBookRepository, BookRepository>();
@@ -44,11 +42,15 @@ builder.Services.AddMediatR(cfg =>
 });
 
 // Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 // Swagger
-// builder.Services.AddEndpointsApiExplorer();
-// builder.Services.AddSwaggerGen();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -73,8 +75,8 @@ app.Use(async (context, next) =>
 // -----------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
-    // app.UseSwagger();
-    // app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

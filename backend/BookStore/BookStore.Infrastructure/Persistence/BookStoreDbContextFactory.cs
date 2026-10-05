@@ -8,7 +8,7 @@ public class BookStoreDbContextFactory : IDesignTimeDbContextFactory<BookStoreDb
     public BookStoreDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<BookStoreDbContext>();
-        optionsBuilder.UseSqlite("Data Source=bookstore.db");
+        optionsBuilder.UseSqlite("Data Source=../data/bookstore.db");
 
         return new BookStoreDbContext(optionsBuilder.Options);
     }

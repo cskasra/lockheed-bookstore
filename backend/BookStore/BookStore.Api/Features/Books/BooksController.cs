@@ -1,6 +1,8 @@
 using BookStore.Application.Common;
 using BookStore.Application.Features.Books.CreateBook;
 using BookStore.Application.Features.Books.GetBooks;
+using BookStore.Application.Features.Books.UpdateBook;
+using BookStore.Application.Features.Books.DeleteBook;
 using BookStore.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +39,6 @@ public class BooksController : ControllerBase
     }
 
     // POST api/books
-    // Client posts selected Open Library result + local fields (GenreId, Price, Stock)
     [HttpPost]
     public async Task<IActionResult> AddBook([FromBody] CreateBookCommand command, CancellationToken ct)
     {
@@ -45,5 +46,22 @@ public class BooksController : ControllerBase
         if (!result.Success) return Problem(result.Error);
 
         return CreatedAtAction(nameof(GetBooks), new { id = result.Value }, null);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateBook(int id, [FromBody] UpdateBookCommand command, CancellationToken ct)
+    {
+        if (id != command.Id)
+            return BadRequest("Route id and body id must match.");
+
+        var result = await _mediator.Send(command, ct);
+        return result.Success ? Ok() : Problem(result.Error);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteBook(int id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new DeleteBookCommand(id), ct);
+        return result.Success ? Ok() : Problem(result.Error);
     }
 }
