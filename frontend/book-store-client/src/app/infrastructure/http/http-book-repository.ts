@@ -21,7 +21,7 @@ export class HttpBookRepository implements IBookRepository {
   }
 
   updateBook(id: string, book: Partial<Book>): Observable<Book> {
-    return this.http.patch<Book>(`${this.apiUrl}/${id}`, book);
+    return this.http.put<Book>(`${this.apiUrl}/${id}`, book);
   }
 
   deleteBook(id: string): Observable<void> {
