@@ -9,7 +9,7 @@ import { Genre } from '../../../core/domain/models/book.model';
   imports: [FormsModule],
   template: `
     <header class="flex justify-between items-center p-4">
-      <h1 class="text-2xl font-bold">Lockheed Martin Test Project -- BookStore Client Demo</h1>
+      <h1 class="text-2xl font-bold">Lockheed Martin BookStore Client v1</h1>
   `
 })
 export class HeaderComponent {

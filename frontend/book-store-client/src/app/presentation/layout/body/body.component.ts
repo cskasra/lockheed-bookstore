@@ -2,19 +2,27 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+// PrimeNG UI Components
 import { ButtonModule } from 'primeng/button';
 import { PaginatorModule } from 'primeng/paginator';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
-
 import { ConfirmationService, MessageService } from 'primeng/api';
+
+// ADDED: AG Grid
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, ICellRendererParams, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { firstValueFrom } from 'rxjs';
 
 import { BookStoreState } from '../../../core/application/state/book-store.service';
 import { BOOK_REPOSITORY } from '../../../infrastructure/di/tokens';
 import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow.component';
+
+// Add this right below your imports!
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 @Component({
   selector: 'app-body',
@@ -28,6 +36,7 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
     ConfirmDialogModule,
     DialogModule,
     InputNumberModule,
+    AgGridAngular, // Replaced CDK with AG Grid
     AddBookFlowComponent
   ],
   providers: [ConfirmationService, MessageService],
@@ -45,84 +54,18 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
       <!-- MAIN CONTAINER -->
       <div class="bg-white border border-solid border-gray-200 rounded-lg shadow-sm w-full flex flex-col flex-1 overflow-hidden">
         
-        <div class="overflow-auto flex-1">
-          <table class="w-full text-left border-collapse min-w-200 text-[0.8em]">
-            <thead class="sticky top-0 z-10 bg-gray-50 shadow-[0_1px_0_0_#e5e7eb]">
-              <tr>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900 w-16 text-center">Cover</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900">Title</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900">Author</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900">Year</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900">ISBN</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900">Genre</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900 text-right">Price</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900 text-right">Stock</th>
-                <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (book of store.books(); track book.id) {
-                <tr class="hover:bg-gray-50 transition-colors">
-                  
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-center">
-                    <img 
-                      [src]="book.coverUrl" 
-                      [alt]="book.title" 
-                      class="object-cover rounded shadow-sm border border-gray-200 bg-gray-100 mx-auto"
-                      onerror="this.src='https://via.placeholder.com/48x64?text=No+Cover'"
-                      style="width:45px;height:60px;"
-                    />
-                  </td>
-                  
-                  <td class="border-b border-solid border-gray-200 p-1.5 font-medium text-gray-900">{{ book.title }}</td>
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-gray-600">{{ book.author }}</td>
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-right">{{ book.publishedYear }}</td>
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-gray-600">{{ book.isbn }}</td>
-                  <td class="border-b border-solid border-gray-200 p-1.5">
-                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-[0.9em] font-medium block w-max">
-                      {{ book.genre || 'Unknown' }}
-                    </span>
-                  </td>
-                  
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-right">{{ book.price | currency }}</td>
-                  
-                  <td class="border-b border-solid border-gray-200 p-1.5 text-right">
-                    <span class="font-medium" [ngClass]="{'text-red-600': (book?.stock ?? 0) < 5, 'text-green-600': (book?.stock ?? 0) >= 5}">
-                      {{ book.stock }}
-                    </span>
-                  </td>
-                  
-                  <td class="border-b border-solid border-gray-200 p-1.5">
-                     <div class="flex gap-1 justify-center">
-                       <p-button 
-                         icon="pi pi-pencil" 
-                         label=""
-                         severity="secondary" 
-                         [text]="true" 
-                         size="small"
-                         (onClick)="editBook(book)">
-                       </p-button>
-                       <p-button 
-                         icon="pi pi-trash" 
-                         label=""
-                         severity="danger" 
-                         [text]="true" 
-                         size="small"
-                         (onClick)="deleteBook(book)">
-                       </p-button>
-                     </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="9" class="border-b border-solid border-gray-200 p-12 text-center text-gray-500">
-                    <i class="pi pi-inbox text-3xl mb-3 block text-gray-400"></i>
-                    No books found in the catalog.
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <!-- AG GRID (Height Fixes Applied) -->
+        <div class="flex-1 w-full h-full min-h-[500px]">
+          <ag-grid-angular
+            style="width: 100%; height: 100%; display: block;"
+            class="ag-theme-quartz block"
+            [rowData]="store.books()"
+            [columnDefs]="colDefs"
+            [rowHeight]="70"
+            [context]="gridContext"
+            [suppressCellFocus]="true"
+            [animateRows]="true">
+          </ag-grid-angular>
         </div>
         
         <div class="bg-white border-t border-solid border-gray-200 shrink-0">
@@ -138,6 +81,7 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
         </div>
       </div>
 
+      <!-- CONFIRM DIALOG -->
       <p-confirmdialog 
         styleClass="w-[400px] [&_.p-dialog-header]:!px-[0px] [&_.p-dialog-footer]:!px-[12px] [&_.p-dialog-content]:!pl-[12px] [&_.p-dialog-content]:!pr-[12px] [&_.p-dialog-title]:mx-auto [&_.p-dialog-title]:p-[0px]"
       >
@@ -216,6 +160,30 @@ export class BodyComponent implements OnInit {
   editStock = 0;
   isSaving = signal(false);
 
+  // We pass 'this' into the grid context so the Action Cell Renderer can call our Edit/Delete methods
+  gridContext = { componentParent: this };
+
+  // AG Grid Column Definitions
+  colDefs: ColDef[] = [
+    { field: 'coverUrl', headerName: 'Cover', cellRenderer: CoverRenderer, width: 90, sortable: false },
+    { field: 'title', headerName: 'Title', flex: 2, minWidth: 200, sortable: true },
+    { field: 'author', headerName: 'Author', flex: 1, sortable: true },
+    { field: 'publishedYear', headerName: 'Year', width: 100, sortable: true },
+    { field: 'isbn', headerName: 'ISBN', width: 140 },
+    { field: 'genre', headerName: 'Genre', cellRenderer: GenreRenderer, width: 130, sortable: true },
+    { 
+      field: 'price', 
+      headerName: 'Price', 
+      width: 110, 
+      sortable: true, 
+      type: 'rightAligned',
+      // Formats the raw number into currency directly in the cell
+      valueFormatter: params => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(params.value)
+    },
+    { field: 'stock', headerName: 'Stock', cellRenderer: StockRenderer, width: 100, type: 'rightAligned', sortable: true },
+    { headerName: 'Actions', cellRenderer: ActionRenderer, width: 120, sortable: false }
+  ];
+
   ngOnInit() {
     this.store.loadBooks();
   }
@@ -261,11 +229,8 @@ export class BodyComponent implements OnInit {
     this.confirmationService.confirm({
       message: `Are you sure you want to permanently delete "${book.title}" from the catalog?`,
       header: 'Confirm Deletion',
-
-      // Much cleaner! Just the PrimeNG color classes and 12px padding
-      acceptButtonStyleClass: 'p-button-success !px-[12px]',
-      rejectButtonStyleClass: 'p-button-secondary !px-[12px] !mr-[12px]',
-
+      acceptButtonProps: { styleClass: '!bg-green-600 !border-green-600 !text-white hover:!bg-green-700 !px-[12px]' },
+      rejectButtonProps: { styleClass: '!bg-gray-200 !border-gray-200 !text-gray-800 hover:!bg-gray-300 !px-[12px] !mr-[12px]' },
       accept: async () => {
         try {
           await firstValueFrom(this.bookRepo.deleteBook(book.id));
@@ -277,5 +242,82 @@ export class BodyComponent implements OnInit {
         }
       }
     });
+  }
+}
+
+// ---------------------------------------------------------
+// AG GRID CUSTOM CELL RENDERERS
+// ---------------------------------------------------------
+
+@Component({
+  standalone: true,
+  template: `
+    <div class="flex items-center h-full pt-1">
+      <img [src]="params.value" class="object-cover rounded shadow-sm border border-gray-200 bg-gray-100"
+           onerror="this.src='https://via.placeholder.com/48x64?text=No+Cover'"
+           style="width:45px;height:60px;" />
+    </div>
+  `
+})
+export class CoverRenderer implements ICellRendererAngularComp {
+  params!: ICellRendererParams;
+  agInit(params: ICellRendererParams): void { this.params = params; }
+  refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
+}
+
+@Component({
+  standalone: true,
+  template: `
+    <div class="flex items-center h-full">
+      <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-[0.9em] font-medium block w-max leading-none">
+        {{ params.value || 'Unknown' }}
+      </span>
+    </div>
+  `
+})
+export class GenreRenderer implements ICellRendererAngularComp {
+  params!: ICellRendererParams;
+  agInit(params: ICellRendererParams): void { this.params = params; }
+  refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
+}
+
+@Component({
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div class="flex items-center justify-end h-full w-full">
+      <span class="font-medium" [ngClass]="{'text-red-600': (params.value ?? 0) < 5, 'text-green-600': (params.value ?? 0) >= 5}">
+        {{ params.value }}
+      </span>
+    </div>
+  `
+})
+export class StockRenderer implements ICellRendererAngularComp {
+  params!: ICellRendererParams;
+  agInit(params: ICellRendererParams): void { this.params = params; }
+  refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
+}
+
+@Component({
+  standalone: true,
+  imports: [ButtonModule],
+  template: `
+    <div class="flex gap-1 items-center h-full">
+      <p-button icon="pi pi-pencil" severity="secondary" [text]="true" size="small" (onClick)="onEdit()"></p-button>
+      <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" (onClick)="onDelete()"></p-button>
+    </div>
+  `
+})
+export class ActionRenderer implements ICellRendererAngularComp {
+  params!: ICellRendererParams;
+  agInit(params: ICellRendererParams): void { this.params = params; }
+  refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
+  
+  onEdit() {
+    this.params.context.componentParent.editBook(this.params.data);
+  }
+  
+  onDelete() {
+    this.params.context.componentParent.deleteBook(this.params.data);
   }
 }

@@ -18,6 +18,8 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@primeng/themes": "^21.0.4",
+    "ag-grid-angular": "^36.2.0",
+    "ag-grid-community": "^36.2.0",
     "primeicons": "^8.0.2",
     "primeng": "^22.1.2",
     "rxjs": "~7.8.0",

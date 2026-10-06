@@ -5,7 +5,7 @@ import { Component } from '@angular/core';
   standalone: true,
   template: `
     <footer class="p-4 text-center text-xsm border-t border-gray-700" style="font-size:.8em;">
-      <p>© 2026 Lockheed Martin Test Project -- BookStore Client Demo - Cyrus Kasra - <a href="mailto:info@cyruskasra.com" target=_mail>info@cyruskasra.com</a></p>
+      <p>© 2026 Lockheed Martin BookStore Client v1 - Cyrus Kasra - <a href="mailto:info@cyruskasra.com" target=_mail>info@cyruskasra.com</a></p>
     </footer>
   `
 })

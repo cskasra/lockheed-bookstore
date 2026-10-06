@@ -1,5 +1,5 @@
 # Lockheed Martin Bookstore Test Project Frontend
-## Cyrus Kasra -- info@cyruskasra.com -- 20261005 -- https://github.com/cskasra/lockheed-bookstore/tree/main
+## Cyrus Kasra -- info@cyruskasra.com -- 20261006 -- https://github.com/cskasra/lockheed-bookstore/tree/main
  
 ## High-level Plan
 
@@ -23,3 +23,7 @@ To start a local development server, run:
 ```bash
 pnpm start
 ```
+
+## Known issues
+
+PrimeNG component does not seem to work as it doesn't render any data rows. In its place we're using AG Grid community edition.

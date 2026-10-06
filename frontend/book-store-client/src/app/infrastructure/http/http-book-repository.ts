@@ -3,7 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { IBookRepository } from '../../core/domain/ports/repositories';
 import { Book, Genre } from '../../core/domain/models/book.model';
-import { BookStoreState } from '../../core/application/state/book-store.service';
 
 @Injectable({ providedIn: 'root' })
 export class HttpBookRepository implements IBookRepository {
