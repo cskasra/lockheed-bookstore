@@ -1,31 +1,54 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
 import { ButtonModule } from 'primeng/button';
 import { PaginatorModule } from 'primeng/paginator';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
+
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { firstValueFrom } from 'rxjs';
+
 import { BookStoreState } from '../../../core/application/state/book-store.service';
+import { BOOK_REPOSITORY } from '../../../infrastructure/di/tokens';
 import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow.component';
 
 @Component({
   selector: 'app-body',
   standalone: true,
-  imports: [CommonModule, ButtonModule, PaginatorModule, AddBookFlowComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ButtonModule, 
+    PaginatorModule, 
+    ToastModule, 
+    ConfirmDialogModule, 
+    DialogModule, 
+    InputNumberModule, 
+    AddBookFlowComponent
+  ],
+  providers: [ConfirmationService, MessageService],
   template: `
-    <!-- Removed overflow-y-auto from main to prevent full-page scrolling -->
+    <p-toast></p-toast>
+    <!-- CHANGED: Lowercase 'd' in confirmdialog -->
+    <p-confirmdialog styleClass="w-[400px]"></p-confirmdialog>
+
     <main class="flex-1 px-4 py-6 flex flex-col h-full overflow-hidden">
       
-      <!-- HEADER (Stays fixed) -->
+      <!-- HEADER -->
       <div class="flex justify-between items-center mb-6 shrink-0">
         <h2 class="text-xl font-semibold text-gray-800">Catalog</h2>
         <p-button label="Add Book" icon="pi pi-plus" (onClick)="showAddFlow = true"></p-button>
       </div>
 
-      <!-- MAIN CONTAINER: flex-1 ensures it fills the rest of the screen -->
+      <!-- MAIN CONTAINER -->
       <div class="bg-white border border-solid border-gray-200 rounded-lg shadow-sm w-full flex flex-col flex-1 overflow-hidden">
         
-        <!-- TABLE WRAPPER: Scrollable area for the rows -->
         <div class="overflow-auto flex-1">
           <table class="w-full text-left border-collapse min-w-200 text-[0.8em]">
-            <!-- ADDED: sticky top-0 to keep the table header visible while scrolling rows -->
             <thead class="sticky top-0 z-10 bg-gray-50 shadow-[0_1px_0_0_#e5e7eb]">
               <tr>
                 <th class="border-b border-solid border-gray-200 p-1.5 font-semibold text-gray-900 w-16 text-center">Cover</th>
@@ -104,7 +127,6 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
           </table>
         </div>
         
-        <!-- FOOTER (Stays fixed at the bottom of the container) -->
         <div class="bg-white border-t border-solid border-gray-200 shrink-0">
           <p-paginator 
             (onPageChange)="onPageChange($event)" 
@@ -118,16 +140,72 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
         </div>
       </div>
 
+      <!-- UPDATE DIALOG -->
+      <p-dialog 
+        header="Update Inventory" 
+        [visible]="editingBook() !== null" 
+        (onHide)="editingBook.set(null)" 
+        [modal]="true" 
+        styleClass="w-[400px] [&_.p-dialog-title]:mx-auto [&_.p-dialog-title]:pl-8"
+        headerStyleClass="!p-[12px] border-b border-gray-200"
+        contentStyleClass="!p-[12px]"
+      >
+        <div class="flex flex-col gap-[12px] mt-2" *ngIf="editingBook()">
+          <p class="text-[0.9em] text-gray-600 mb-2">
+            Updating values for <strong>{{ editingBook()?.title }}</strong>
+          </p>
+
+          <div class="flex flex-col gap-1 w-full [&_p-inputnumber]:w-full [&_.p-inputnumber]:!w-full">
+            <label class="text-[0.8em] font-medium text-gray-700">Price ($)</label>
+            <p-inputnumber 
+              [style]="{ width: '100%' }"
+              styleClass="!w-full"
+              inputStyleClass="border border-solid border-gray-300 rounded !w-full px-3 py-2" 
+              class="text-[0.8em] block w-full" 
+              [(ngModel)]="editPrice" 
+              mode="currency" 
+              currency="USD" 
+              locale="en-US">
+            </p-inputnumber>            
+          </div>
+          
+          <div class="flex flex-col gap-1 w-full [&_p-inputnumber]:w-full [&_.p-inputnumber]:!w-full">
+            <label class="text-[0.8em] font-medium text-gray-700"># in Stock</label>
+            <p-inputnumber 
+              [style]="{ width: '100%' }"
+              styleClass="!w-full"
+              inputStyleClass="border border-solid border-gray-300 rounded !w-full px-3 py-2" 
+              class="text-[0.8em] block w-full" 
+              [(ngModel)]="editStock">
+            </p-inputnumber>            
+          </div>
+
+          <div class="flex justify-end gap-[12px] mt-4 pt-4 border-t border-solid border-gray-200">
+            <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="editingBook.set(null)" [disabled]="isSaving()"></p-button>
+            <p-button label="Save Changes" icon="pi pi-check" (onClick)="saveUpdate()" [loading]="isSaving()"></p-button>
+          </div>
+        </div>
+      </p-dialog>
+
       <app-add-book-flow *ngIf="showAddFlow" (close)="showAddFlow = false"></app-add-book-flow>
     </main>
   `
 })
 export class BodyComponent implements OnInit {
   store = inject(BookStoreState);
-  showAddFlow = false;
+  
+  private bookRepo = inject(BOOK_REPOSITORY);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
 
+  showAddFlow = false;
   first = 0;
   rows = 10;
+
+  editingBook = signal<any>(null);
+  editPrice = 0;
+  editStock = 0;
+  isSaving = signal(false);
 
   ngOnInit() {
     this.store.loadBooks();
@@ -136,18 +214,58 @@ export class BodyComponent implements OnInit {
   onPageChange(event: any) {
     this.first = event.first;
     this.rows = event.rows;
-    
     const page = Math.floor(event.first / event.rows) + 1;
-    
     this.store.currentPage.set(page);
     this.store.loadBooks();
   }
 
   editBook(book: any) {
-    console.log('Update book clicked:', book);
+    this.editingBook.set(book);
+    this.editPrice = book.price;
+    this.editStock = book.stock;
+  }
+
+  async saveUpdate() {
+    const book = this.editingBook();
+    if (!book) return;
+
+    this.isSaving.set(true);
+    try {
+      await firstValueFrom(this.bookRepo.updateBook(book.id, {
+        ...book,
+        price: this.editPrice,
+        stock: this.editStock
+      }));
+
+      this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'Inventory updated successfully.' });
+      this.store.loadBooks(); 
+      this.editingBook.set(null); 
+    } catch (e: any) {
+      console.error('Update failed:', e);
+      this.messageService.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed to update book.' });
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   deleteBook(book: any) {
-    console.log('Delete book clicked:', book);
+    this.confirmationService.confirm({
+      message: `Are you sure you want to permanently delete "${book.title}" from the catalog?`,
+      header: 'Confirm Deletion',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger', 
+      rejectButtonStyleClass: 'p-button-secondary p-button-text',
+      
+      accept: async () => {
+        try {
+          await firstValueFrom(this.bookRepo.deleteBook(book.id));
+          this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Book removed from catalog.' });
+          this.store.loadBooks(); 
+        } catch (e: any) {
+          console.error('Delete failed:', e);
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed to delete book.' });
+        }
+      }
+    });
   }
 }
