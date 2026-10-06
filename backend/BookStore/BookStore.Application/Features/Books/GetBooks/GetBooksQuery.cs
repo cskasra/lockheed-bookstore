@@ -1,7 +1,9 @@
 using MediatR;
 using BookStore.Application.Common;
-using BookStore.Domain.Entities;
 
 namespace BookStore.Application.Features.Books.GetBooks;
 
-public record GetBooksQuery() : IRequest<Result<IReadOnlyList<Book>>>;
+public record GetBooksQuery(
+    int? _page = null,
+    string? _sort = null
+) : IRequest<Result<BookListResponse>>;

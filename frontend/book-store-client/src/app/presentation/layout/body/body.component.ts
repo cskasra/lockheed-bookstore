@@ -90,7 +90,7 @@ ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
             [totalRecords]="store.totalRecords()" 
             [showCurrentPageReport]="true"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} books"
-            [rowsPerPageOptions]="[10, 20, 50]">
+            [rowsPerPageOptions]="[10]">
           </p-paginator>
         </div>
       </div>
@@ -214,10 +214,10 @@ export class BodyComponent implements OnInit {
 
   colDefs: ColDef[] = [
     { field: 'coverUrl', headerName: 'Cover', cellRenderer: CoverRenderer, width: 90, sortable: false, filter: false },
-    { field: 'title', headerName: 'Title', minWidth: 200 },
-    { field: 'author', headerName: 'Author', minWidth: 150 },
-    { field: 'publishedYear', headerName: 'Year', width: 100 },
-    { field: 'isbn', headerName: 'ISBN', width: 140 },
+    { field: 'title', headerName: 'Title', minWidth: 200, cellClass: 'flex items-center' },
+    { field: 'author', headerName: 'Author', minWidth: 150, cellClass: 'flex items-center' },
+    { field: 'publishedYear', headerName: 'Year', width: 100, cellClass: 'flex items-center' },
+    { field: 'isbn', headerName: 'ISBN', width: 140, cellClass: 'flex items-center' },
     { field: 'genre', headerName: 'Genre', cellRenderer: GenreRenderer, width: 130 },
     {
       field: 'price',
@@ -225,6 +225,7 @@ export class BodyComponent implements OnInit {
       width: 110,
       type: 'rightAligned',
       filter: 'agNumberColumnFilter',
+      cellClass: 'flex items-center',
       valueFormatter: params => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(params.value)
     },
     { field: 'stock', headerName: 'Stock', cellRenderer: StockRenderer, width: 100, type: 'rightAligned', filter: 'agNumberColumnFilter' },

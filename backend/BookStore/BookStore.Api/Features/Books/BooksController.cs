@@ -24,9 +24,9 @@ public class BooksController : ControllerBase
 
     // GET api/books
     [HttpGet]
-    public async Task<IActionResult> GetBooks(CancellationToken ct)
+    public async Task<IActionResult> GetBooks([FromQuery] int? _page, [FromQuery] string? _sort, CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetBooksQuery(), ct);
+        var result = await _mediator.Send(new GetBooksQuery(_page, _sort), ct);
         return result.Success ? Ok(result.Value) : Problem(result.Error);
     }
 

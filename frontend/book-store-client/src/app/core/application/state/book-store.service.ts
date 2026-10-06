@@ -42,7 +42,7 @@ export class BookStoreState {
       const results = await firstValueFrom(
         this.bookRepo.getBooks(this.currentPage(), this.currentSort(), this.selectedGenre())
       );
-      this.books.set(results.map(e => ({
+      this.books.set(results.data.map(e => ({
         id: e.id,
         title: e.title,
         author: e.author,
@@ -56,7 +56,7 @@ export class BookStoreState {
         openLibraryKey: e.openLibraryKey,
         description: e.description,
       })));
-      this.totalRecords.set(results.length);
+      this.totalRecords.set(results.count);
       console.log(results);
     } catch (error) {
       console.error('Error loading books:', error);

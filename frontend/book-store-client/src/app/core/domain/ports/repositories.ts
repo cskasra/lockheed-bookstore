@@ -1,8 +1,8 @@
 import { Observable } from 'rxjs';
-import { Book, CatalogItem, Genre } from '../models/book.model';
+import { Book, BookResponse, CatalogItem, Genre } from '../models/book.model';
 
 export interface IBookRepository {
-  getBooks(page: number, sort: string, genre?: Genre): Observable<Book[]>;
+  getBooks(page: number, sort: string, genre?: Genre): Observable<BookResponse>;
   addBook(book: Omit<Book, 'id'>): Observable<Book>;
   updateBook(id: string, book: Partial<Book>): Observable<Book>;
   deleteBook(id: string): Observable<void>;

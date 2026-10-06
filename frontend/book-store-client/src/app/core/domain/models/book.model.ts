@@ -22,7 +22,10 @@ export interface Book {
   openLibraryKey: string;
   description: string;
 }
-
+export interface BookResponse {
+  data: Book[];
+  count: number;
+}
 export interface CatalogItem {
   title: string;
   author: string;
