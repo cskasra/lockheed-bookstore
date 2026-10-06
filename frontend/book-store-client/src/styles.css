@@ -1,9 +1,7 @@
-@import "primeicons/primeicons.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "ag-grid-community/styles/ag-grid.css";
-@import "ag-grid-community/styles/ag-theme-quartz.css";
+
 @theme {
   --color-primary: #3b82f6;
 }

@@ -19,6 +19,7 @@ public class UpdateBookCommandHandler : IRequestHandler<UpdateBookCommand, Resul
         if (book is null)
             return Result<bool>.Ok(false);
 
+        book.GenreId = request.GenreId;
         book.Price = request.Price;
         book.Stock = request.Stock;
 

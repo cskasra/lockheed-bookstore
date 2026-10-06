@@ -9,20 +9,31 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { SelectModule } from 'primeng/select'; // <-- CHANGED: Dropdown is now Select in v18
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { Genre } from '../../../core/domain/models/book.model';
 
-// ADDED: AG Grid
+// AG Grid Components
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, ICellRendererParams, ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import {
+  ColDef,
+  ICellRendererParams,
+  ModuleRegistry,
+  AllCommunityModule,
+  SizeColumnsToFitGridStrategy,
+  SortChangedEvent,
+  ValidationModule
+} from 'ag-grid-community';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
+
 import { firstValueFrom } from 'rxjs';
 
 import { BookStoreState } from '../../../core/application/state/book-store.service';
 import { BOOK_REPOSITORY } from '../../../infrastructure/di/tokens';
 import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow.component';
 
-// Add this right below your imports!
-ModuleRegistry.registerModules([AllCommunityModule]);
+// REQUIRED: Register AG Grid Community modules globally
+ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
 
 @Component({
   selector: 'app-body',
@@ -36,39 +47,42 @@ ModuleRegistry.registerModules([AllCommunityModule]);
     ConfirmDialogModule,
     DialogModule,
     InputNumberModule,
-    AgGridAngular, // Replaced CDK with AG Grid
+    SelectModule, // <-- CHANGED: Registered SelectModule
+    AgGridAngular,
     AddBookFlowComponent
   ],
   providers: [ConfirmationService, MessageService],
   template: `
     <p-toast></p-toast>
     
-    <main class="flex-1 px-4 py-6 flex flex-col h-full overflow-hidden">
+    <main class="flex-1 py-6 flex flex-col h-full overflow-hidden w-full">
       
       <!-- HEADER -->
-      <div class="flex justify-between items-center mb-6 shrink-0">
+      <div class="flex justify-between items-center mb-6 shrink-0 px-4">
         <h2 class="text-xl font-semibold text-gray-800">Catalog</h2>
         <p-button label="Add Book" icon="pi pi-plus" (onClick)="showAddFlow = true"></p-button>
       </div>
 
       <!-- MAIN CONTAINER -->
-      <div class="bg-white border border-solid border-gray-200 rounded-lg shadow-sm w-full flex flex-col flex-1 overflow-hidden">
+      <div class="bg-white border-y border-solid border-gray-200 shadow-sm w-full flex flex-col overflow-hidden">
         
-        <!-- AG GRID (Height Fixes Applied) -->
-        <div class="flex-1 w-full h-full min-h-[500px]">
+        <div style="height: calc(100vh - 392px); width: 100%;">
           <ag-grid-angular
             style="width: 100%; height: 100%; display: block;"
-            class="ag-theme-quartz block"
             [rowData]="store.books()"
             [columnDefs]="colDefs"
+            [defaultColDef]="defaultColDef"
+            [autoSizeStrategy]="autoSizeStrategy"
             [rowHeight]="70"
             [context]="gridContext"
             [suppressCellFocus]="true"
-            [animateRows]="true">
+            [animateRows]="true"
+            (sortChanged)="onSortChanged($event)">
           </ag-grid-angular>
         </div>
         
-        <div class="bg-white border-t border-solid border-gray-200 shrink-0">
+        <!-- FOOTER PAGINATOR -->
+        <div class="bg-white border-t border-solid border-gray-200 shrink-0 px-4">
           <p-paginator 
             (onPageChange)="onPageChange($event)" 
             [first]="first" 
@@ -108,6 +122,18 @@ ModuleRegistry.registerModules([AllCommunityModule]);
             Updating values for <strong>{{ editingBook()?.title }}</strong>
           </p>
 
+          <!-- CHANGED: Now uses p-select for PrimeNG 18 compatibility -->
+          <div class="flex flex-col gap-1 w-full [&_p-select]:w-full [&_.p-select]:!w-full">
+            <label class="text-[0.8em] font-medium text-gray-700">Genre</label>
+            <p-select 
+              [options]="genreOptions" 
+              [(ngModel)]="editGenre" 
+              placeholder="Select a Genre"
+              styleClass="border border-solid border-gray-300 rounded !w-full text-[0.8em]"
+              appendTo="body">
+            </p-select>
+          </div>
+
           <div class="flex flex-col gap-1 w-full [&_p-inputnumber]:w-full [&_.p-inputnumber]:!w-full">
             <label class="text-[0.8em] font-medium text-gray-700">Price ($)</label>
             <p-inputnumber 
@@ -135,7 +161,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
           <div class="flex justify-end gap-[12px] mt-4 pt-4 border-t border-solid border-gray-200">
             <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="editingBook.set(null)" [disabled]="isSaving()"></p-button>
-            <p-button label="Save Changes" icon="pi pi-check" (onClick)="saveUpdate()" [loading]="isSaving()"></p-button>
+            <p-button label="Save Changes" severity="secondary" [text]="true" (onClick)="saveUpdate()" [loading]="isSaving()"></p-button>
           </div>
         </div>
       </p-dialog>
@@ -156,32 +182,53 @@ export class BodyComponent implements OnInit {
   rows = 10;
 
   editingBook = signal<any>(null);
+
+  editGenre = '';
   editPrice = 0;
   editStock = 0;
+
   isSaving = signal(false);
 
-  // We pass 'this' into the grid context so the Action Cell Renderer can call our Edit/Delete methods
+  genreOptions: string[] = [
+    'Fiction',
+    'SciFi',
+    'Fantasy',
+    'Mystery',
+    'Biography',
+    'NonFiction',
+    'Children',
+    'History',
+  ];
+
   gridContext = { componentParent: this };
 
-  // AG Grid Column Definitions
+  autoSizeStrategy: SizeColumnsToFitGridStrategy = {
+    type: 'fitGridWidth'
+  };
+
+  defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    floatingFilter: true
+  };
+
   colDefs: ColDef[] = [
-    { field: 'coverUrl', headerName: 'Cover', cellRenderer: CoverRenderer, width: 90, sortable: false },
-    { field: 'title', headerName: 'Title', flex: 2, minWidth: 200, sortable: true },
-    { field: 'author', headerName: 'Author', flex: 1, sortable: true },
-    { field: 'publishedYear', headerName: 'Year', width: 100, sortable: true },
+    { field: 'coverUrl', headerName: 'Cover', cellRenderer: CoverRenderer, width: 90, sortable: false, filter: false },
+    { field: 'title', headerName: 'Title', minWidth: 200 },
+    { field: 'author', headerName: 'Author', minWidth: 150 },
+    { field: 'publishedYear', headerName: 'Year', width: 100 },
     { field: 'isbn', headerName: 'ISBN', width: 140 },
-    { field: 'genre', headerName: 'Genre', cellRenderer: GenreRenderer, width: 130, sortable: true },
-    { 
-      field: 'price', 
-      headerName: 'Price', 
-      width: 110, 
-      sortable: true, 
+    { field: 'genre', headerName: 'Genre', cellRenderer: GenreRenderer, width: 130 },
+    {
+      field: 'price',
+      headerName: 'Price',
+      width: 110,
       type: 'rightAligned',
-      // Formats the raw number into currency directly in the cell
+      filter: 'agNumberColumnFilter',
       valueFormatter: params => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(params.value)
     },
-    { field: 'stock', headerName: 'Stock', cellRenderer: StockRenderer, width: 100, type: 'rightAligned', sortable: true },
-    { headerName: 'Actions', cellRenderer: ActionRenderer, width: 120, sortable: false }
+    { field: 'stock', headerName: 'Stock', cellRenderer: StockRenderer, width: 100, type: 'rightAligned', filter: 'agNumberColumnFilter' },
+    { headerName: 'Actions', cellRenderer: ActionRenderer, width: 120, sortable: false, filter: false }
   ];
 
   ngOnInit() {
@@ -196,8 +243,26 @@ export class BodyComponent implements OnInit {
     this.store.loadBooks();
   }
 
+  onSortChanged(event: SortChangedEvent) {
+    const sortedColumn = event.api.getColumnState().find(col => col.sort !== null);
+
+    if (sortedColumn) {
+      const field = sortedColumn.colId;
+      const direction = sortedColumn.sort;
+      console.log(`Instructing backend to sort by ${field} (${direction})`);
+    } else {
+      console.log('Sorting cleared');
+    }
+
+    this.first = 0;
+    this.store.currentPage.set(1);
+    this.store.loadBooks();
+  }
+
   editBook(book: any) {
     this.editingBook.set(book);
+
+    this.editGenre = book.genre || '';
     this.editPrice = book.price;
     this.editStock = book.stock;
   }
@@ -210,6 +275,7 @@ export class BodyComponent implements OnInit {
     try {
       await firstValueFrom(this.bookRepo.updateBook(book.id, {
         id: book.id,
+        genreId: this.genreOptions.indexOf(this.editGenre) + 1,
         price: this.editPrice,
         stock: this.editStock
       }));
@@ -300,11 +366,27 @@ export class StockRenderer implements ICellRendererAngularComp {
 
 @Component({
   standalone: true,
-  imports: [ButtonModule],
   template: `
-    <div class="flex gap-1 items-center h-full">
-      <p-button icon="pi pi-pencil" severity="secondary" [text]="true" size="small" (onClick)="onEdit()"></p-button>
-      <p-button icon="pi pi-trash" severity="danger" [text]="true" size="small" (onClick)="onDelete()"></p-button>
+    <div class="flex gap-2 items-center justify-center h-full">
+      
+      <button 
+        class="flex items-center justify-center w-8 h-8 rounded-md border border-solid border-gray-300 text-gray-600 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+        (click)="onEdit()"
+        title="Edit Book">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+        </svg>
+      </button>
+      
+      <button 
+        class="flex items-center justify-center w-8 h-8 rounded-md border border-solid border-red-200 text-red-600 bg-white hover:bg-red-50 transition-colors cursor-pointer"
+        (click)="onDelete()"
+        title="Delete Book">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+        </svg>
+      </button>
+      
     </div>
   `
 })
@@ -312,11 +394,11 @@ export class ActionRenderer implements ICellRendererAngularComp {
   params!: ICellRendererParams;
   agInit(params: ICellRendererParams): void { this.params = params; }
   refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
-  
+
   onEdit() {
     this.params.context.componentParent.editBook(this.params.data);
   }
-  
+
   onDelete() {
     this.params.context.componentParent.deleteBook(this.params.data);
   }
