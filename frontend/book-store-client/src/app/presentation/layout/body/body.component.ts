@@ -72,7 +72,6 @@ ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
             [rowData]="store.books()"
             [columnDefs]="colDefs"
             [defaultColDef]="defaultColDef"
-            [autoSizeStrategy]="autoSizeStrategy"
             [rowHeight]="70"
             [context]="gridContext"
             [suppressCellFocus]="true"
@@ -89,7 +88,7 @@ ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
             [rows]="rows" 
             [totalRecords]="store.totalRecords()" 
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} books">
+            currentPageReportTemplate="{first} to {last} of {totalRecords} books">
           </p-paginator>
         </div>
       </div>
@@ -178,7 +177,7 @@ export class BodyComponent implements OnInit {
 
   showAddFlow = false;
   first = 0;
-  rows = 10;
+  rows = 6;
 
   editingBook = signal<any>(null);
 
@@ -213,7 +212,7 @@ export class BodyComponent implements OnInit {
 
   colDefs: ColDef[] = [
     { field: 'coverUrl', headerName: 'Cover', cellRenderer: CoverRenderer, width: 90, sortable: false, filter: false },
-    { field: 'title', headerName: 'Title', minWidth: 200, cellClass: 'flex items-center' },
+    { field: 'title', headerName: 'Title', minWidth: 200, flex: 1, cellClass: 'flex items-center' },
     { field: 'author', headerName: 'Author', minWidth: 150, cellClass: 'flex items-center' },
     { field: 'publishedYear', headerName: 'Year', width: 100, cellClass: 'flex items-center' },
     { field: 'isbn', headerName: 'ISBN', width: 140, cellClass: 'flex items-center' },
