@@ -20,22 +20,20 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
   selector: 'app-body',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ButtonModule, 
-    PaginatorModule, 
-    ToastModule, 
-    ConfirmDialogModule, 
-    DialogModule, 
-    InputNumberModule, 
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    PaginatorModule,
+    ToastModule,
+    ConfirmDialogModule,
+    DialogModule,
+    InputNumberModule,
     AddBookFlowComponent
   ],
   providers: [ConfirmationService, MessageService],
   template: `
     <p-toast></p-toast>
-    <!-- CHANGED: Lowercase 'd' in confirmdialog -->
-    <p-confirmdialog styleClass="w-[400px]"></p-confirmdialog>
-
+    
     <main class="flex-1 px-4 py-6 flex flex-col h-full overflow-hidden">
       
       <!-- HEADER -->
@@ -98,7 +96,7 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
                      <div class="flex gap-1 justify-center">
                        <p-button 
                          icon="pi pi-pencil" 
-                         label="Update"
+                         label=""
                          severity="secondary" 
                          [text]="true" 
                          size="small"
@@ -106,7 +104,7 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
                        </p-button>
                        <p-button 
                          icon="pi pi-trash" 
-                         label="Delete"
+                         label=""
                          severity="danger" 
                          [text]="true" 
                          size="small"
@@ -139,6 +137,17 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
           </p-paginator>
         </div>
       </div>
+
+      <p-confirmdialog 
+        styleClass="w-[400px] [&_.p-dialog-header]:!px-[0px] [&_.p-dialog-footer]:!px-[12px] [&_.p-dialog-content]:!pl-[12px] [&_.p-dialog-content]:!pr-[12px] [&_.p-dialog-title]:mx-auto [&_.p-dialog-title]:p-[0px]"
+      >
+        <ng-template pTemplate="message" let-message>
+          <div class="flex items-center gap-3 py-2">
+            <i class="pi pi-trash text-red-600 text-2xl"></i>
+            <p class="text-gray-800 m-0 leading-tight">{{ message.message }}</p>
+          </div>
+        </ng-template>
+      </p-confirmdialog>
 
       <!-- UPDATE DIALOG -->
       <p-dialog 
@@ -193,7 +202,7 @@ import { AddBookFlowComponent } from '../../features/add-book-flow/add-book-flow
 })
 export class BodyComponent implements OnInit {
   store = inject(BookStoreState);
-  
+
   private bookRepo = inject(BOOK_REPOSITORY);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
@@ -232,14 +241,14 @@ export class BodyComponent implements OnInit {
     this.isSaving.set(true);
     try {
       await firstValueFrom(this.bookRepo.updateBook(book.id, {
-        ...book,
+        id: book.id,
         price: this.editPrice,
         stock: this.editStock
       }));
 
       this.messageService.add({ severity: 'success', summary: 'Updated', detail: 'Inventory updated successfully.' });
-      this.store.loadBooks(); 
-      this.editingBook.set(null); 
+      this.store.loadBooks();
+      this.editingBook.set(null);
     } catch (e: any) {
       console.error('Update failed:', e);
       this.messageService.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed to update book.' });
@@ -252,15 +261,16 @@ export class BodyComponent implements OnInit {
     this.confirmationService.confirm({
       message: `Are you sure you want to permanently delete "${book.title}" from the catalog?`,
       header: 'Confirm Deletion',
-      icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger', 
-      rejectButtonStyleClass: 'p-button-secondary p-button-text',
-      
+
+      // Much cleaner! Just the PrimeNG color classes and 12px padding
+      acceptButtonStyleClass: 'p-button-success !px-[12px]',
+      rejectButtonStyleClass: 'p-button-secondary !px-[12px] !mr-[12px]',
+
       accept: async () => {
         try {
           await firstValueFrom(this.bookRepo.deleteBook(book.id));
           this.messageService.add({ severity: 'success', summary: 'Deleted', detail: 'Book removed from catalog.' });
-          this.store.loadBooks(); 
+          this.store.loadBooks();
         } catch (e: any) {
           console.error('Delete failed:', e);
           this.messageService.add({ severity: 'error', summary: 'Error', detail: e?.message || 'Failed to delete book.' });
