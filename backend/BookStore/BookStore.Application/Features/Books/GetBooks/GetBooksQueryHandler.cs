@@ -34,8 +34,7 @@ public class GetBooksQueryHandler
             };
         }
 
-        // PAGING (page size = 10)
-        const int pageSize = 10;
+        const int pageSize = 6;
 
         if (request._page is not null && request._page > 0)
         {

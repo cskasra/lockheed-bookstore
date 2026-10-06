@@ -89,8 +89,7 @@ ModuleRegistry.registerModules([AllCommunityModule, ValidationModule]);
             [rows]="rows" 
             [totalRecords]="store.totalRecords()" 
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} books"
-            [rowsPerPageOptions]="[10]">
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} books">
           </p-paginator>
         </div>
       </div>
@@ -238,8 +237,15 @@ export class BodyComponent implements OnInit {
 
   onPageChange(event: any) {
     this.first = event.first;
-    this.rows = event.rows;
-    const page = Math.floor(event.first / event.rows) + 1;
+    this.rows = 6;
+    const page = Math.floor(this.first / this.rows) + 1;
+
+    console.log('@@@@');
+    console.log(this.first);
+    console.log(this.rows);
+    console.log(this.first / this.rows);
+
+
     this.store.currentPage.set(page);
     this.store.loadBooks();
   }
