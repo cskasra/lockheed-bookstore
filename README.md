@@ -1,2 +1,2 @@
-# lockheed-bookstore
-Test project as part of Lockheed pre-interview process
+# lockheed-martin-bookstore
+Test project as part of Lockheed Martin pre-interview process
