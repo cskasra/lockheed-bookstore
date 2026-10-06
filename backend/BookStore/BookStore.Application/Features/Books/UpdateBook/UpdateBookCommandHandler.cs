@@ -19,14 +19,6 @@ public class UpdateBookCommandHandler : IRequestHandler<UpdateBookCommand, Resul
         if (book is null)
             return Result<bool>.Ok(false);
 
-        book.Title = request.Title;
-        book.Author = request.Author;
-        book.Isbn = request.Isbn;
-        book.PublishedYear = request.PublishedYear;
-        book.CoverUrl = request.CoverUrl;
-        book.OpenLibraryKey = request.OpenLibraryKey;
-        book.Description = request.Description;
-        book.GenreId = request.GenreId;
         book.Price = request.Price;
         book.Stock = request.Stock;
 

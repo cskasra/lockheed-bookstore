@@ -9,4 +9,5 @@ public interface IBookRepository
     Task AddAsync(Book book, CancellationToken ct);
     Task DeleteAsync(Book book, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
+    Task<Book?> GetByIsbnAsync(string isbn, CancellationToken ct);
 }

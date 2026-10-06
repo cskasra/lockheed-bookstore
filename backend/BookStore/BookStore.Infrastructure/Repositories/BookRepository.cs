@@ -32,4 +32,10 @@ public class BookRepository : IBookRepository
 
     public Task SaveChangesAsync(CancellationToken ct) =>
         _db.SaveChangesAsync(ct);
+
+    public async Task<Book?> GetByIsbnAsync(string isbn, CancellationToken ct)
+    {
+        return await _db.Books
+            .FirstOrDefaultAsync(b => b.Isbn == isbn, ct);
+    }
 }

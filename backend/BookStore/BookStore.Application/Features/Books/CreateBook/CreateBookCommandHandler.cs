@@ -16,6 +16,13 @@ public class CreateBookCommandHandler
         CreateBookCommand request,
         CancellationToken ct)
     {
+        // 🔍 Check for duplicate ISBN
+        var existing = await _repo.GetByIsbnAsync(request.Isbn, ct);
+        if (existing is not null)
+        {
+            return Result<int>.Fail($"A book with ISBN '{request.Isbn}' already exists.");
+        }
+
         var book = new Book
         {
             Title = request.Title,

@@ -9,11 +9,24 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// CORS: allow your frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .AllowAnyOrigin() // or .WithOrigins("http://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 // -----------------------------------------------------
 // Serilog Logging
 // -----------------------------------------------------
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
+
     .WriteTo.Console()
     .CreateLogger();
 
@@ -76,10 +89,19 @@ app.Use(async (context, next) =>
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Lockheed Martin BookStore API v1");
+        options.DocumentTitle = "Lockheed Martin BookStore API Documentation";
+    });
+    app.MapGet("/", context =>
+    {
+        context.Response.Redirect("/swagger");
+        return Task.CompletedTask;
+    });
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend"); // Apply CORS
 app.MapControllers();
-
 app.Run();

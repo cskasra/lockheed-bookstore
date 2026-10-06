@@ -32,9 +32,9 @@ public class BooksController : ControllerBase
 
     // GET api/books/search?title=...
     [HttpGet("search")]
-    public async Task<IActionResult> SearchBooks([FromQuery] string title, CancellationToken ct)
+    public async Task<IActionResult> SearchBooks([FromQuery] string titleAuthorIsbn, CancellationToken ct)
     {
-        var books = await _catalogClient.SearchByTitleAsync(title, ct);
+        var books = await _catalogClient.SearchByTitleAsync(titleAuthorIsbn, ct);
         return Ok(books);
     }
 

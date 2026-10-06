@@ -1,0 +1,63 @@
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
+@theme {
+  --color-primary: #3b82f6;
+}
+
+:root {
+  --font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body {
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f9fafb; /* bg-gray-50 */
+}
+
+/* 1. Force the app to take up the full screen height */
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* 2. Create the centered business margins manually */
+.business-layout {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Pushes footer down */
+  width: 100%;
+  max-width: 80rem; /* max-w-7xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem; /* px-8 */
+  padding-right: 2rem;
+  padding-top: 2.5rem; /* py-10 */
+  padding-bottom: 2.5rem;
+}
+
+/* 3. Ensure custom components don't collapse */
+app-header, app-body, app-footer {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+app-header, app-footer {
+  background-color: #8bb5ff;
+  width: 100%;
+  text-align: center;
+  padding: 0.5em;
+}
+app-body {
+  text-align: left;
+}
+.p-select {
+  border: 1px solid #d1d5db; /* Tailwind gray-300 */
+  border-radius: 4px;
+}
