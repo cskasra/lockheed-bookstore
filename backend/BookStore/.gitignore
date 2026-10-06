@@ -6,7 +6,7 @@ node_modules/
 .env
 
 # Ignore macOS system files
-.DS_Store
+**/.DS_Store
 
 bin/
 obj/
